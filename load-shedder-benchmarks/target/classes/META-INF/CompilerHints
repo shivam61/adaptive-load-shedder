@@ -1,0 +1,9 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,io/github/shivam61/loadshedder/benchmarks/PolicyBenchmark.benchmarkControllerDrivenPolicy
+inline,io/github/shivam61/loadshedder/benchmarks/PolicyBenchmark.benchmarkStaticPolicy
+inline,io/github/shivam61/loadshedder/benchmarks/PolicyBenchmark.benchmarkTokenBucketPolicy
+inline,io/github/shivam61/loadshedder/benchmarks/PolicyBenchmark.setup
