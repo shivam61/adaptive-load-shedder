@@ -13,6 +13,33 @@ This library implements a decoupled **Controller-Policy** architecture:
 1. **Controllers** (`AdaptiveController`) run periodically, analyze real-time system snapshots (p95 latency, queue depth, error rates), and calculate an `overloadScore` to adjust a global acceptance probability.
 2. **Policies** (`Policy`) run on the hot path per-request, applying the controller's probability against request priorities (CRITICAL to BACKGROUND) to make a fast `ACCEPT`, `DEGRADE`, or `REJECT` decision.
 
+### High-Level Design (HLD)
+
+```mermaid
+graph TD
+    %% Control Plane (Async)
+    subgraph "Control Plane (Asynchronous Tick)"
+        Metrics[(System Metrics\np95 Latency, Inflight)] -->|ControlSnapshot| Controller[AdaptiveController\n(e.g., AIMD)]
+        Controller -->|Calculates Overload Score| State[ControllerState\nGlobal Probability]
+        State --> Shaper[PriorityAcceptanceShaper]
+        Shaper -->|Per-Priority Probabilities| PolicyState((Shared State))
+    end
+
+    %% Data Plane (Sync Hot-Path)
+    subgraph "Data Plane (Synchronous Hot-Path)"
+        Req[Incoming Request] --> Ctx[RequestContext\nPriority, Route]
+        Ctx --> Evaluator[ControllerDrivenPolicy]
+        
+        PolicyState -.->|Lock-free read| Evaluator
+        
+        Evaluator -->|evaluates| Decision{Decision}
+        
+        Decision -->|Accept| OK[Proceed to Service]
+        Decision -->|Degrade| Fallback[Execute Fallback / Cache]
+        Decision -->|Reject| Drop[HTTP 429 / gRPC RESOURCE_EXHAUSTED]
+    end
+```
+
 ### Included Controllers
 * **`AimdAdaptiveController` (Default):** Uses Additive Increase, Multiplicative Decrease (AIMD) based on a composite overload score. Modulates probability smoothly during mild load and aggressively cuts load during severe spikes.
 * **`GradientAdaptiveController`:** Compares current latencies against past latencies (derivatives) to determine if the system is worsening or improving, providing hyper-responsive shedding in noisy environments.
