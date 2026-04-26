@@ -1,7 +1,15 @@
 # Adaptive Load Shedder
 
-A low-latency, adaptive load shedding library for backend services. 
-Protects latency-sensitive services by rejecting or degrading low-priority traffic under overload, ensuring Service Level Objectives (SLOs) are maintained.
+![Java 21](https://img.shields.io/badge/Java-21-blue.svg)
+![Build Status](https://github.com/shivam61/adaptive-load-shedder/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Microservices Resilience](https://img.shields.io/badge/Microservices-Resilience-orange.svg)
+
+**Keywords:** `Load Shedding`, `Java`, `gRPC`, `HTTP`, `Microservices`, `Overload Protection`, `Resilience`, `AIMD`, `Tail Latency`, `SLO Management`
+
+
+A production-grade, low-latency **adaptive load shedding** library for Java backend services. 
+Designed to protect latency-sensitive microservices by gracefully rejecting or degrading low-priority traffic under severe overload, ensuring strict Service Level Objectives (SLOs) are maintained. Ideal for **gRPC** and **HTTP** REST APIs experiencing high-concurrency spikes.
 
 ## The Problem
 In highly concurrent systems, sudden spikes in traffic can lead to unbounded queues. When a service is overloaded, response times increase dramatically (tail latency amplification), leading to downstream timeouts. If the service attempts to process requests that have already timed out, it wastes resources on "dead" work, leading to a catastrophic queue collapse. Static rate limiting is often insufficient because it doesn't adapt to the real-time health and latency of the system.
