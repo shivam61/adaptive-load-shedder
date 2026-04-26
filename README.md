@@ -19,15 +19,15 @@ This library implements a decoupled **Controller-Policy** architecture:
 graph TD
     %% Control Plane (Async)
     subgraph "Control Plane (Asynchronous Tick)"
-        Metrics[(System Metrics\np95 Latency, Inflight)] -->|ControlSnapshot| Controller[AdaptiveController\n(e.g., AIMD)]
-        Controller -->|Calculates Overload Score| State[ControllerState\nGlobal Probability]
+        Metrics[("System Metrics<br/>p95 Latency, Inflight")] -->|ControlSnapshot| Controller["AdaptiveController<br/>(e.g., AIMD)"]
+        Controller -->|"Calculates Overload Score"| State["ControllerState<br/>Global Probability"]
         State --> Shaper[PriorityAcceptanceShaper]
         Shaper -->|Per-Priority Probabilities| PolicyState((Shared State))
     end
 
     %% Data Plane (Sync Hot-Path)
     subgraph "Data Plane (Synchronous Hot-Path)"
-        Req[Incoming Request] --> Ctx[RequestContext\nPriority, Route]
+        Req[Incoming Request] --> Ctx["RequestContext<br/>Priority, Route"]
         Ctx --> Evaluator[ControllerDrivenPolicy]
         
         PolicyState -.->|Lock-free read| Evaluator
@@ -36,7 +36,7 @@ graph TD
         
         Decision -->|Accept| OK[Proceed to Service]
         Decision -->|Degrade| Fallback[Execute Fallback / Cache]
-        Decision -->|Reject| Drop[HTTP 429 / gRPC RESOURCE_EXHAUSTED]
+        Decision -->|Reject| Drop["HTTP 429 / gRPC RESOURCE_EXHAUSTED"]
     end
 ```
 
