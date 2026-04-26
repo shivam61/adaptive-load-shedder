@@ -3,29 +3,42 @@
 A low-latency, adaptive load shedding library for backend services. 
 Protects latency-sensitive services by rejecting or degrading low-priority traffic under overload, ensuring Service Level Objectives (SLOs) are maintained.
 
-## Problem
-In highly concurrent systems, sudden spikes in traffic can lead to unbounded queues. When a service is overloaded, response times increase dramatically (tail latency amplification), leading to downstream timeouts. If the service attempts to process requests that have already timed out, it wastes resources on "dead" work, leading to a catastrophic queue collapse. Rate limiting is often insufficient because it uses static thresholds and doesn't adapt to the current health of the system.
+## The Problem
+In highly concurrent systems, sudden spikes in traffic can lead to unbounded queues. When a service is overloaded, response times increase dramatically (tail latency amplification), leading to downstream timeouts. If the service attempts to process requests that have already timed out, it wastes resources on "dead" work, leading to a catastrophic queue collapse. Static rate limiting is often insufficient because it doesn't adapt to the real-time health and latency of the system.
 
-## The Approach
+## The Solution
 **Goal is not maximizing requests served, but maximizing useful requests completed within SLO.**
-Adaptive Load Shedder dynamically sheds load based on real-time system metrics (like p95 latency and inflight requests). It uses an AIMD (Additive Increase, Multiplicative Decrease) control loop to adjust acceptance probabilities on the fly. 
+
+This library implements a decoupled **Controller-Policy** architecture:
+1. **Controllers** (`AdaptiveController`) run periodically, analyze real-time system snapshots (p95 latency, queue depth, error rates), and calculate an `overloadScore` to adjust a global acceptance probability.
+2. **Policies** (`Policy`) run on the hot path per-request, applying the controller's probability against request priorities (CRITICAL to BACKGROUND) to make a fast `ACCEPT`, `DEGRADE`, or `REJECT` decision.
+
+### Included Controllers
+* **`AimdAdaptiveController` (Default):** Uses Additive Increase, Multiplicative Decrease (AIMD) based on a composite overload score. Modulates probability smoothly during mild load and aggressively cuts load during severe spikes.
+* **`GradientAdaptiveController`:** Compares current latencies against past latencies (derivatives) to determine if the system is worsening or improving, providing hyper-responsive shedding in noisy environments.
+* **`LearningController` (Experimental):** Interface provided for Reinforcement Learning-based control loops.
 
 ## Features
 * **Adaptive Control:** Continuously tunes acceptance rate to keep tail latencies within target SLOs.
-* **Priority Handling:** Safely sheds BACKGROUND or LOW priority traffic before touching CRITICAL traffic.
+* **Priority Handling:** Safely sheds `BACKGROUND` or `LOW` priority traffic before touching `CRITICAL` traffic.
 * **Graceful Degradation:** Supports degrading requests (e.g., fetching from cache or limiting fanout) instead of outright rejection.
-* **Fairness & Isolation:** Protects against noisy neighbors using token buckets and priority weighting.
+* **Hard Safety Limits:** Circuit breaks even `CRITICAL` traffic if hard queue limits or inflight caps are breached to prevent JVM exhaustion.
 
 ## Simulation Results
-Based on our internal simulator (simulated but reproducible):
-* **Baseline (No shedding):** Spikes cause p95 to exceed 500ms, massive timeout rate.
-* **Static Threshold:** Rejects too aggressively or too late, missing the "Goldilocks zone".
-* **Adaptive Shedder:** Maintains p95 at ~50ms, safely rejects/degrades lower priority traffic, 0% CRITICAL request drops.
+We built a discrete-event simulator to test these controllers under extreme spikes. 
+The results clearly show that AIMD and Gradient controllers protect latency without dropping `CRITICAL` requests.
+
+See the live-generated results here: [docs/simulation-results.md](docs/simulation-results.md).
+
+To run the simulation yourself:
+```bash
+mvn clean install
+mvn exec:java -Dexec.mainClass="io.github.shivam61.loadshedder.examples.BasicExample" -pl load-shedder-examples
+```
 
 ## Tradeoffs and Limitations
 * **Accuracy vs Latency:** Gathering exact percentiles per request is expensive; the system relies on periodically updated snapshots.
-* **Fairness vs Efficiency:** Strict fairness can reduce total throughput. Adaptive Shedder provides weighted probability rather than strict round-robin to maximize efficiency.
-* **Simplicity vs Adaptability:** AIMD loops require tuning for specific workload profiles. The defaults work for typical web services but might need adjustment for batch processing.
+* **Fairness vs Efficiency:** Strict fairness can reduce total throughput. This system uses weighted probability (via `PriorityAcceptanceShaper`) rather than strict round-robin to maximize efficiency.
 
 ## Integration
 See `load-shedder-grpc` and `load-shedder-http` modules for drop-in interceptors/filters.
