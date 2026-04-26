@@ -1,0 +1,61 @@
+[ {
+  "scenario" : "No Shedding",
+  "totalRequests" : 5700,
+  "accepted" : 5700,
+  "rejected" : 0,
+  "degraded" : 0,
+  "timeouts" : 0,
+  "p50Latency" : 25.0,
+  "p95Latency" : 30.0,
+  "p99Latency" : 34.0,
+  "droppedByPriority" : { },
+  "criticalDropRate" : 0.0
+}, {
+  "scenario" : "Static Threshold",
+  "totalRequests" : 5700,
+  "accepted" : 5392,
+  "rejected" : 308,
+  "degraded" : 0,
+  "timeouts" : 0,
+  "p50Latency" : 30.0,
+  "p95Latency" : 32.0,
+  "p99Latency" : 32.0,
+  "droppedByPriority" : {
+    "HIGH" : 75,
+    "LOW" : 67,
+    "BACKGROUND" : 54,
+    "CRITICAL" : 56,
+    "NORMAL" : 56
+  },
+  "criticalDropRate" : 0.05090909090909091
+}, {
+  "scenario" : "AIMD Controller",
+  "totalRequests" : 5700,
+  "accepted" : 4242,
+  "rejected" : 913,
+  "degraded" : 545,
+  "timeouts" : 0,
+  "p50Latency" : 16.0,
+  "p95Latency" : 24.0,
+  "p99Latency" : 37.0,
+  "droppedByPriority" : {
+    "BACKGROUND" : 913
+  },
+  "criticalDropRate" : 0.0
+}, {
+  "scenario" : "Gradient Controller",
+  "totalRequests" : 5700,
+  "accepted" : 3726,
+  "rejected" : 1054,
+  "degraded" : 920,
+  "timeouts" : 0,
+  "p50Latency" : 15.0,
+  "p95Latency" : 16.0,
+  "p99Latency" : 17.0,
+  "droppedByPriority" : {
+    "HIGH" : 112,
+    "BACKGROUND" : 920,
+    "CRITICAL" : 22
+  },
+  "criticalDropRate" : 0.019625334522747548
+} ]

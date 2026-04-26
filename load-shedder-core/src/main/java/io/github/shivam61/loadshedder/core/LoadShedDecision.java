@@ -1,8 +1,2 @@
 package io.github.shivam61.loadshedder.core;
-
-public enum LoadShedDecision {
-    ACCEPT,
-    REJECT,
-    DEGRADE,
-    QUEUE
-}
+public record LoadShedDecision(DecisionType type, DecisionReason reason, double acceptanceProbability, String explanation) {}

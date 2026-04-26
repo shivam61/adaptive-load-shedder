@@ -1,5 +1,4 @@
 package io.github.shivam61.loadshedder.core;
-
 public class PriorityAwarePolicy implements Policy {
     private final int maxInflightRequests;
     private final int highPriorityThreshold;
@@ -14,22 +13,12 @@ public class PriorityAwarePolicy implements Policy {
     @Override
     public LoadShedDecision decide(RequestContext request, SystemSnapshot snapshot) {
         int inflight = snapshot.inflightRequests();
-        
-        if (inflight >= maxInflightRequests) {
-            return LoadShedDecision.REJECT;
-        }
-
-        if (inflight >= criticalThreshold && request.priority().getLevel() < Priority.CRITICAL.getLevel()) {
-            return LoadShedDecision.REJECT;
-        }
-
+        if (inflight >= maxInflightRequests) return new LoadShedDecision(DecisionType.REJECT, DecisionReason.CAPACITY_EXCEEDED, 0.0, "Limit");
+        if (inflight >= criticalThreshold && request.priority().getLevel() < Priority.CRITICAL.getLevel()) return new LoadShedDecision(DecisionType.REJECT, DecisionReason.PRIORITY_SHED, 0.0, "Critical only");
         if (inflight >= highPriorityThreshold && request.priority().getLevel() <= Priority.NORMAL.getLevel()) {
-            if (request.priority() == Priority.NORMAL) {
-                return LoadShedDecision.DEGRADE;
-            }
-            return LoadShedDecision.REJECT;
+            if (request.priority() == Priority.NORMAL) return new LoadShedDecision(DecisionType.DEGRADE, DecisionReason.PRIORITY_SHED, 0.5, "Degrade normal");
+            return new LoadShedDecision(DecisionType.REJECT, DecisionReason.PRIORITY_SHED, 0.0, "Shed low");
         }
-
-        return LoadShedDecision.ACCEPT;
+        return new LoadShedDecision(DecisionType.ACCEPT, DecisionReason.HEALTHY, 1.0, "Healthy");
     }
 }

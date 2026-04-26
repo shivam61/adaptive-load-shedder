@@ -1,2 +1,2 @@
 io/github/shivam61/loadshedder/core/AdaptiveLoadShedderTest.class
-io/github/shivam61/loadshedder/core/LatencyAwareAdaptivePolicyTest.class
+io/github/shivam61/loadshedder/core/AimdAdaptiveControllerTest.class
